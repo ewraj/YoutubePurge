@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Purge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">🎯</span>
+      <span class="logo-text">YouTube Purge</span>
+    </div>
+    <div class="toggle-wrap">
+      <label class="toggle" id="enableToggleLabel" aria-label="Enable YouTube Purge">
+        <input type="checkbox" id="enableToggle" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <!-- ── Status Banner ───────────────────────────────────────── -->
+  <div class="status-banner" id="statusBanner">
+    <div class="status-dot"></div>
+    <span id="statusText">Filtering active</span>
+  </div>
+
+  <!-- ── Intent Section ─────────────────────────────────────── -->
+  <main class="main">
+    <section class="section">
+      <label class="label" for="intentInput">
+        📚 What are you studying right now?
+      </label>
+      <p class="hint">Enter topics separated by commas.</p>
+      <textarea
+        id="intentInput"
+        class="textarea"
+        placeholder="e.g. Linear Algebra, Calculus, AI, Transformers…"
+        rows="3"
+        spellcheck="false"
+      ></textarea>
+    </section>
+
+    <!-- ── Preset Chips ───────────────────────────────────────── -->
+    <section class="section chips-section">
+      <p class="label">Quick Presets</p>
+      <div class="chips" id="chipContainer">
+        <button class="chip" data-preset="AI, Machine Learning, Neural Networks, Deep Learning">🤖 AI/ML</button>
+        <button class="chip" data-preset="Calculus, Linear Algebra, Statistics, Mathematics">📐 Math</button>
+        <button class="chip" data-preset="Software Engineering, Programming, Algorithms, Data Structures">💻 CS</button>
+        <button class="chip" data-preset="Physics, Quantum Mechanics, Thermodynamics">⚛️ Physics</button>
+        <button class="chip" data-preset="Language Learning, Linguistics, Grammar">🌐 Languages</button>
+        <button class="chip" data-preset="Finance, Economics, Investing, Business">📈 Finance</button>
+      </div>
+    </section>
+
+    <!-- ── AI Threshold ─────────────────────────────────────── -->
+    <section class="section">
+      <label class="label" for="thresholdRange">
+        🧠 AI Confidence Threshold: <strong id="thresholdValue">0.7</strong>
+      </label>
+      <p class="hint">Videos must score above this to be shown (when AI is active).</p>
+      <input
+        type="range"
+        id="thresholdRange"
+        class="range"
+        min="0.3"
+        max="0.95"
+        step="0.05"
+        value="0.7"
+      />
+      <div class="range-labels">
+        <span>Permissive</span>
+        <span>Strict</span>
+      </div>
+    </section>
+
+    <!-- ── Filter Home Page ───────────────────────────────────────── -->
+    <section class="section row-section">
+      <div class="row-label">
+        <span class="label">🏠 Filter Home Page</span>
+        <p class="hint">Purge the main feed (the source of most loops).</p>
+      </div>
+      <label class="toggle small" id="homeToggleLabel">
+        <input type="checkbox" id="homeToggle" checked />
+        <span class="slider"></span>
+      </label>
+    </section>
+
+    <!-- ── Strict Mode ──────────────────────────────────────── -->
+    <section class="section row-section">
+      <div class="row-label">
+        <span class="label">🔒 Strict Mode</span>
+        <p class="hint">Hide videos AI is uncertain about (score ≤ threshold).</p>
+      </div>
+      <label class="toggle small" id="strictToggleLabel">
+        <input type="checkbox" id="strictToggle" checked />
+        <span class="slider"></span>
+      </label>
+    </section>
+
+    <!-- ── Save Button ──────────────────────────────────────── -->
+    <button class="btn-save" id="saveBtn">
+      <span id="saveBtnText">Save Intent</span>
+      <span id="saveBtnIcon">→</span>
+    </button>
+
+    <!-- ── Save Feedback ────────────────────────────────────── -->
+    <div class="save-feedback" id="saveFeedback" aria-live="polite"></div>
+  </main>
+
+  <!-- ── Footer ──────────────────────────────────────────────── -->
+  <footer class="footer">
+    <span>YouTube Purge v1.0 · YouTube Semantic Filter</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

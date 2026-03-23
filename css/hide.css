@@ -1,0 +1,43 @@
+/*
+ * IntentFocus — Zero-Flicker CSS
+ * Injected at document_start — before any YouTube JS runs.
+ * All video cards are hidden by default. The content script will
+ * selectively reveal only those that pass the semantic relevance check.
+ */
+
+/* ─── 1. HIDE VIDEOS THAT FAIL INTENT CHECK ─────────────────────────────────── */
+/* Videos are visible by default. The content script will add this class if blocked. */
+ytd-rich-item-renderer.intentfocus-hidden {
+  display: none !important;
+}
+
+/* ─── 2. CLEAN SLATE — PERMANENT REMOVALS ──────────────────────────────────
+ * These elements are removed forever, not just hidden.
+ * Shorts shelf on Home page
+ */
+ytd-rich-section-renderer,
+ytd-reel-shelf-renderer {
+  display: none !important;
+}
+
+/*
+ * Shorts entry in the sidebar (expanded or mini/collapsed)
+ * Targeting by href, title, and aria-label for maximum compatibility.
+ */
+ytd-guide-entry-renderer:has(a[href*="/shorts"]),
+ytd-mini-guide-entry-renderer:has(a[href*="/shorts"]),
+ytd-guide-entry-renderer:has(a[title*="Shorts"]),
+ytd-mini-guide-entry-renderer:has(a[title*="Shorts"]),
+tp-yt-paper-item:has(a[href*="/shorts"]),
+[aria-label*="Shorts"] {
+  display: none !important;
+}
+
+/* ─── 3. REDUCE DISTRACTING UI CHROME ──────────────────────────────────────
+ * Hide notification bell, end-screen overlays while processing
+ */
+#masthead-ad,
+ytd-ad-slot-renderer,
+.ytd-promoted-video-renderer {
+  display: none !important;
+}
