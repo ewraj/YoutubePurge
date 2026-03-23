@@ -24,7 +24,7 @@ class PipelineSingleton {
       this.instance = await pipeline(this.task, this.model);
       this.ready = true;
       this.loading = false;
-      console.info('[YouTube Purge AI] ✅ Model ready.');
+      console.info('[YouTube Purge AI] [Ready] Model ready.');
     } else {
       // Wait for loading to complete
       await new Promise((resolve) => {
@@ -75,7 +75,7 @@ async function handleClassification(request) {
       }
     }
 
-    console.debug(`[YouTube Purge AI] "${request.text.substring(0, 40)}" → ${intentScore.toFixed(3)}`);
+    console.debug(`[YouTube Purge AI] "${request.text.substring(0, 40)}" -> ${intentScore.toFixed(3)}`);
     return intentScore;
   } catch (err) {
     console.error('[YouTube Purge AI] Classification failed:', err);

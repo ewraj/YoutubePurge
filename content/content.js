@@ -114,14 +114,14 @@ function keywordCheck(metadata) {
   // Hard block — regardless of intent
   for (const kw of ALWAYS_BLOCKED_KEYWORDS) {
     if (text.includes(kw.toLowerCase())) {
-      console.info('[YouTube Purge] ❌ Blocked (Hard Keyword: "' + kw + '"): ' + metadata.combinedText.substring(0, 40) + '...');
+      console.info('[YouTube Purge] [Blocked] (Hard Keyword: "' + kw + '"): ' + metadata.combinedText.substring(0, 40) + '...');
       return 'block';
     }
   }
 
   // Intent match — approve
   if (intentKeywords.length === 0) {
-    console.info('[YouTube Purge] ⚠️ No intent keywords set. Please set your intent in the popup.');
+    console.info('[YouTube Purge] [Warning] No intent keywords set. Please set your intent in the popup.');
     return 'uncertain';
   }
 
@@ -133,12 +133,12 @@ function keywordCheck(metadata) {
       const rxStr = '\\\\b' + kw.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&') + '\\\\b';
       const regex = new RegExp(rxStr, 'i');
       if (regex.test(text)) {
-        console.info('[YouTube Purge] ✅ Approved (Regex Match: "' + kw + '"): ' + metadata.combinedText.substring(0, 40) + '...');
+        console.info('[YouTube Purge] [Approved] (Regex Match: "' + kw + '"): ' + metadata.combinedText.substring(0, 40) + '...');
         return 'approve';
       }
     } else {
       if (text.includes(kw.toLowerCase())) {
-        console.info('[YouTube Purge] ✅ Approved (Keyword Match: "' + kw + '"): ' + metadata.combinedText.substring(0, 40) + '...');
+        console.info('[YouTube Purge] [Approved] (Keyword Match: "' + kw + '"): ' + metadata.combinedText.substring(0, 40) + '...');
         return 'approve';
       }
     }
@@ -262,7 +262,7 @@ async function checkRelevance(el, retryCount = 0) {
         const live = isLiveStream(el);
         if (live) {
           // Live streams must have an EXACT keyword match to pass — AI alone is not enough
-          console.info('[YouTube Purge] 📡 Live stream detected, requiring exact keyword match.');
+          console.info('[YouTube Purge] [Live] Live stream detected, requiring exact keyword match.');
           el.style.setProperty('display', 'none', 'important');
           el.style.setProperty('opacity', '0', 'important');
           return;
@@ -273,19 +273,19 @@ async function checkRelevance(el, retryCount = 0) {
         if (score === null) {
           // AI unavailable — always show. Hard-block keywords already caught the obvious trash.
           // Don't punish videos just because the AI engine is busy/loading.
-          console.info('[YouTube Purge] ⚠️ Shown (AI unavailable, benefit of the doubt): ' + metadata.combinedText.substring(0, 40));
+          console.info('[YouTube Purge] [Warning] Shown (AI unavailable, benefit of the doubt): ' + metadata.combinedText.substring(0, 40));
           el.style.removeProperty('display');
           el.style.setProperty('transition', 'filter 0.5s ease-out, opacity 0.5s ease-out', 'important');
           el.style.setProperty('filter', 'blur(0px) grayscale(0%)', 'important');
           el.style.setProperty('opacity', '1', 'important');
         } else if (score >= aiThreshold) {
-          console.info('[YouTube Purge] ✅ Approved (AI Score: ' + score.toFixed(3) + '): ' + metadata.combinedText.substring(0, 40));
+          console.info('[YouTube Purge] [Approved] (AI Score: ' + score.toFixed(3) + '): ' + metadata.combinedText.substring(0, 40));
           el.style.removeProperty('display');
           el.style.setProperty('transition', 'filter 0.5s ease-out, opacity 0.5s ease-out', 'important');
           el.style.setProperty('filter', 'blur(0px) grayscale(0%)', 'important');
           el.style.setProperty('opacity', '1', 'important');
         } else {
-          console.info('[YouTube Purge] 🙈 Hidden (AI Score: ' + score.toFixed(3) + ' < Threshold: ' + aiThreshold + '): ' + metadata.combinedText.substring(0, 40));
+          console.info('[YouTube Purge] [Hidden] (AI Score: ' + score.toFixed(3) + ' < Threshold: ' + aiThreshold + '): ' + metadata.combinedText.substring(0, 40));
           el.style.setProperty('display', 'none', 'important');
           el.style.setProperty('opacity', '0', 'important');
         }
