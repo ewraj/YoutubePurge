@@ -13,7 +13,6 @@
   <!-- ── Header ──────────────────────────────────────────────── -->
   <header class="header">
     <div class="logo">
-      <span class="logo-icon">🎯</span>
       <span class="logo-text">YouTube Purge</span>
     </div>
     <div class="toggle-wrap">
@@ -34,13 +33,13 @@
   <main class="main">
     <section class="section">
       <label class="label" for="intentInput">
-        📚 What are you studying right now?
+        What are you studying right now?
       </label>
       <p class="hint">Enter topics separated by commas.</p>
       <textarea
         id="intentInput"
         class="textarea"
-        placeholder="e.g. Linear Algebra, Calculus, AI, Transformers…"
+        placeholder="e.g. Linear Algebra, Calculus, AI, Transformers..."
         rows="3"
         spellcheck="false"
       ></textarea>
@@ -50,19 +49,19 @@
     <section class="section chips-section">
       <p class="label">Quick Presets</p>
       <div class="chips" id="chipContainer">
-        <button class="chip" data-preset="AI, Machine Learning, Neural Networks, Deep Learning">🤖 AI/ML</button>
-        <button class="chip" data-preset="Calculus, Linear Algebra, Statistics, Mathematics">📐 Math</button>
-        <button class="chip" data-preset="Software Engineering, Programming, Algorithms, Data Structures">💻 CS</button>
-        <button class="chip" data-preset="Physics, Quantum Mechanics, Thermodynamics">⚛️ Physics</button>
-        <button class="chip" data-preset="Language Learning, Linguistics, Grammar">🌐 Languages</button>
-        <button class="chip" data-preset="Finance, Economics, Investing, Business">📈 Finance</button>
+        <button class="chip" data-preset="AI, Machine Learning, Neural Networks, Deep Learning">AI/ML</button>
+        <button class="chip" data-preset="Calculus, Linear Algebra, Statistics, Mathematics">Math</button>
+        <button class="chip" data-preset="Software Engineering, Programming, Algorithms, Data Structures">CS</button>
+        <button class="chip" data-preset="Physics, Quantum Mechanics, Thermodynamics">Physics</button>
+        <button class="chip" data-preset="Language Learning, Linguistics, Grammar">Languages</button>
+        <button class="chip" data-preset="Finance, Economics, Investing, Business">Finance</button>
       </div>
     </section>
 
     <!-- ── AI Threshold ─────────────────────────────────────── -->
     <section class="section">
       <label class="label" for="thresholdRange">
-        🧠 AI Confidence Threshold: <strong id="thresholdValue">0.7</strong>
+        AI Confidence Threshold: <strong id="thresholdValue">0.7</strong>
       </label>
       <p class="hint">Videos must score above this to be shown (when AI is active).</p>
       <input
@@ -83,7 +82,7 @@
     <!-- ── Filter Home Page ───────────────────────────────────────── -->
     <section class="section row-section">
       <div class="row-label">
-        <span class="label">🏠 Filter Home Page</span>
+        <span class="label">Filter Home Page</span>
         <p class="hint">Purge the main feed (the source of most loops).</p>
       </div>
       <label class="toggle small" id="homeToggleLabel">
@@ -95,8 +94,8 @@
     <!-- ── Strict Mode ──────────────────────────────────────── -->
     <section class="section row-section">
       <div class="row-label">
-        <span class="label">🔒 Strict Mode</span>
-        <p class="hint">Hide videos AI is uncertain about (score ≤ threshold).</p>
+        <span class="label">Strict Mode</span>
+        <p class="hint">Hide videos AI is uncertain about (score <= threshold).</p>
       </div>
       <label class="toggle small" id="strictToggleLabel">
         <input type="checkbox" id="strictToggle" checked />
