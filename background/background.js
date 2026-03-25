@@ -1,107 +1,118 @@
-// ─── Offscreen Document Manager ───────────────────────────────────────────────
+// ─── Gemini Nano Session Manager ──────────────────────────────────────────────
 
-let creating; // A promise to track document creation
+let aiSession = null;
+let aiStatus = 'initializing'; // 'ready' | 'unavailable' | 'initializing'
 
-async function setupOffscreenDocument(path) {
-  // Check if an offscreen document exists
-  const offscreenUrl = chrome.runtime.getURL(path);
-  const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-    documentUrls: [offscreenUrl]
-  });
+/**
+ * System prompt designed to return a clean numeric score.
+ * The model is instructed to output ONLY a number between 0.0 and 1.0.
+ */
+const SYSTEM_PROMPT = `You are a YouTube video relevance classifier.
 
-  if (existingContexts.length > 0) {
-    return;
-  }
+A user has set a learning intent. Given that intent and a video's metadata,
+output ONLY a single decimal number between 0.0 and 1.0 representing how
+relevant the video is to the user's learning intent.
 
-  // create only one offscreen document
-  if (creating) {
-    await creating;
-  } else {
-    creating = chrome.offscreen.createDocument({
-      url: path,
-      reasons: ['LOCAL_STORAGE'], // More reliable background reason
-      justification: 'Run local machine learning models for YouTube Purge semantic filtering',
-    });
-    await creating;
-    creating = null;
-    // Grace period for model to start loading — 3s ensures even slow connections
-    // have time to begin fetching the model before the first classification request.
-    await new Promise(r => setTimeout(r, 3000));
+Rules:
+- 1.0 = Perfectly matches the learning intent (e.g. a tutorial, lecture, deep-dive)
+- 0.5 = Ambiguous (could be related but not clearly educational)
+- 0.0 = Clearly irrelevant (entertainment, vlog, gaming, music, etc.)
+- Output ONLY the number. No explanation. No units. No extra text.`;
+
+async function initAI() {
+  try {
+    if (!('ai' in self) || !('languageModel' in self.ai)) {
+      console.warn('[YouTube Purge AI] Chrome Prompt API not found. Using keyword-only mode.');
+      aiStatus = 'unavailable';
+      return;
+    }
+
+    const capabilities = await self.ai.languageModel.capabilities();
+
+    if (capabilities.available === 'no') {
+      console.warn('[YouTube Purge AI] Gemini Nano not available on this device.');
+      aiStatus = 'unavailable';
+      return;
+    }
+
+    if (capabilities.available === 'after-download') {
+      console.info('[YouTube Purge AI] Gemini Nano is downloading. Will retry in 30s...');
+      aiStatus = 'downloading';
+      setTimeout(initAI, 30000);
+      return;
+    }
+
+    // 'readily' — create session
+    aiSession = await self.ai.languageModel.create({ systemPrompt: SYSTEM_PROMPT });
+    aiStatus = 'ready';
+    console.info('[YouTube Purge AI] Gemini Nano ready.');
+  } catch (err) {
+    console.error('[YouTube Purge AI] Init failed:', err);
+    aiStatus = 'unavailable';
   }
 }
 
-// ─── Message Listener Proxy Queue ─────────────────────────────────────────────
+// Boot the AI engine immediately when service worker starts
+initAI();
 
-const classificationQueue = [];
-let isProcessingQueue = false;
+// ─── Message Listener ─────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+
+  // ── Classification Request ──────────────────────────────────────────────────
   if (request.type === 'CLASSIFY') {
-    classificationQueue.push({ request, sendResponse });
-    processQueue();
-    return true; // Indicates async response
+    handleClassification(request).then(sendResponse);
+    return true; // async
+  }
+
+  // ── Status Query (from popup) ───────────────────────────────────────────────
+  if (request.type === 'GET_AI_STATUS') {
+    sendResponse({ status: aiStatus });
+    return false;
   }
 });
 
-async function processQueue() {
-  if (isProcessingQueue) return;
-  if (classificationQueue.length === 0) return;
-  
-  isProcessingQueue = true;
+// ─── Classification Logic ─────────────────────────────────────────────────────
+
+async function handleClassification(request) {
+  if (!aiSession || aiStatus !== 'ready') {
+    return null; // content.js handles null gracefully (benefit of the doubt)
+  }
+
+  const { text, intentKeywords } = request;
+  if (!text || !intentKeywords || intentKeywords.length === 0) return null;
+
+  const intentStr = intentKeywords.join(', ');
+  const prompt = `Intent: "${intentStr}"\nVideo: ${text.substring(0, 500)}\nScore:`;
 
   try {
-    await setupOffscreenDocument('background/offscreen.html');
+    const raw = await aiSession.prompt(prompt);
+    const score = parseFloat(raw.trim());
+
+    if (isNaN(score)) {
+      console.warn('[YouTube Purge AI] Non-numeric response:', raw);
+      return null;
+    }
+
+    // Clamp to [0, 1]
+    const clamped = Math.min(1, Math.max(0, score));
+    console.debug(`[YouTube Purge AI] "${text.substring(0, 40)}" -> ${clamped.toFixed(3)}`);
+    return clamped;
   } catch (err) {
-    console.error('[YouTube Purge] Failed to setup offscreen doc:', err);
-    // Flush queue with 0.5 neutral scores
-    while (classificationQueue.length > 0) {
-      classificationQueue.shift().sendResponse(0.5);
-    }
-    isProcessingQueue = false;
-    return;
-  }
-
-  while (classificationQueue.length > 0) {
-    const { request, sendResponse } = classificationQueue.shift();
-    
+    // Session may have died — try to recreate it once
+    console.warn('[YouTube Purge AI] Prompt failed, recreating session...', err.message);
     try {
-      // Forward the classification request to the offscreen document with a retry
-      let score = 0.5;
-      let attempts = 0;
-      
-      while (attempts < 3) {
-        score = await new Promise((resolve) => {
-          chrome.runtime.sendMessage(
-            {
-              type: 'CLASSIFY_OFFSCREEN',
-              text: request.text,
-              intentKeywords: request.intentKeywords
-            },
-            (response) => {
-              if (chrome.runtime.lastError) {
-                console.warn(`[YouTube Purge] Offscreen attempt ${attempts + 1} failed:`, chrome.runtime.lastError.message);
-                resolve(null);
-              } else {
-                resolve(response);
-              }
-            }
-          );
-        });
-
-        if (score !== null) break;
-        attempts++;
-        await new Promise(r => setTimeout(r, 1000)); // Wait 1s before retry
-      }
-
-      sendResponse(score !== null ? score : null);
-    } catch (err) {
-      console.error('[YouTube Purge] Proxy failed:', err);
-      sendResponse(null); // null lets content.js decide based on strict mode
+      aiSession = await self.ai.languageModel.create({ systemPrompt: SYSTEM_PROMPT });
+      const raw = await aiSession.prompt(prompt);
+      const score = parseFloat(raw.trim());
+      return isNaN(score) ? null : Math.min(1, Math.max(0, score));
+    } catch (retryErr) {
+      console.error('[YouTube Purge AI] Retry failed:', retryErr);
+      aiStatus = 'unavailable';
+      aiSession = null;
+      return null;
     }
   }
-
-  isProcessingQueue = false;
 }
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -115,9 +126,9 @@ chrome.runtime.onInstalled.addListener((details) => {
 
   // Set default initial settings
   chrome.storage.sync.get(['enabled', 'intent', 'aiThreshold', 'strictMode', 'filterHome'], (result) => {
-    if (result.enabled === undefined) chrome.storage.sync.set({ enabled: true });
-    if (result.intent === undefined) chrome.storage.sync.set({ intent: 'ai, machine learning, mathematics, algorithm' });
-    if (result.aiThreshold === undefined) chrome.storage.sync.set({ aiThreshold: 0.7 });
+    if (result.enabled === undefined)    chrome.storage.sync.set({ enabled: true });
+    if (result.intent === undefined)     chrome.storage.sync.set({ intent: 'ai, machine learning, mathematics, algorithm' });
+    if (result.aiThreshold === undefined) chrome.storage.sync.set({ aiThreshold: 0.6 });
     if (result.strictMode === undefined) chrome.storage.sync.set({ strictMode: true });
     if (result.filterHome === undefined) chrome.storage.sync.set({ filterHome: true });
   });
@@ -133,30 +144,5 @@ chrome.storage.onChanged.addListener((changes, area) => {
     const color = isEnabled ? '#8a0303' : '#333333';
     chrome.action.setBadgeText({ text });
     chrome.action.setBadgeBackgroundColor({ color });
-  }
-});
-
-// ─── Tab Cleanup ──────────────────────────────────────────────────────────────
-
-/**
- * When any tab closes, check if there are any remaining YouTube tabs.
- * If not, close the Offscreen Document to free memory and CPU.
- */
-chrome.tabs.onRemoved.addListener(async () => {
-  try {
-    const ytTabs = await chrome.tabs.query({ url: 'https://www.youtube.com/*' });
-    if (ytTabs.length === 0) {
-      const offscreenUrl = chrome.runtime.getURL('background/offscreen.html');
-      const existing = await chrome.runtime.getContexts({
-        contextTypes: ['OFFSCREEN_DOCUMENT'],
-        documentUrls: [offscreenUrl]
-      });
-      if (existing.length > 0) {
-        await chrome.offscreen.closeDocument();
-        console.info('[YouTube Purge] No YouTube tabs remain — Offscreen AI engine shut down.');
-      }
-    }
-  } catch (e) {
-    // Silently ignore — this is a best-effort cleanup
   }
 });

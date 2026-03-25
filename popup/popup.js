@@ -19,6 +19,29 @@ const saveFeedback = document.getElementById('saveFeedback');
 const statusBanner = document.getElementById('statusBanner');
 const statusText = document.getElementById('statusText');
 const chipContainer = document.getElementById('chipContainer');
+const aiStatusBadge = document.getElementById('aiStatusBadge');
+
+// ─── AI Status ────────────────────────────────────────────────────────────────
+
+function updateAIStatus() {
+  chrome.runtime.sendMessage({ type: 'GET_AI_STATUS' }, (response) => {
+    if (chrome.runtime.lastError || !response) return;
+    const status = response.status;
+    aiStatusBadge.className = 'ai-status-badge';
+    if (status === 'ready') {
+      aiStatusBadge.classList.add('ready');
+      aiStatusBadge.textContent = 'Ready';
+    } else if (status === 'downloading') {
+      aiStatusBadge.classList.add('downloading');
+      aiStatusBadge.textContent = 'Downloading';
+    } else if (status === 'initializing') {
+      aiStatusBadge.textContent = 'Starting...';
+    } else {
+      aiStatusBadge.textContent = 'Not Available';
+    }
+  });
+}
+
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
@@ -132,3 +155,5 @@ intentInput.addEventListener('keydown', (e) => {
 // ─── Boot ─────────────────────────────────────────────────────────────────────
 
 loadSettings();
+updateAIStatus();
+

@@ -29038,7 +29038,7 @@ var require_offscreen = __commonJS({
           this.instance = await pipeline(this.task, this.model);
           this.ready = true;
           this.loading = false;
-          console.info("[YouTube Purge AI] \u2705 Model ready.");
+          console.info("[YouTube Purge AI] [Ready] Model ready.");
         } else {
           await new Promise((resolve) => {
             const check = setInterval(() => {
@@ -29091,7 +29091,7 @@ var require_offscreen = __commonJS({
             intentScore += output.scores[i];
           }
         }
-        console.debug(`[YouTube Purge AI] "${request.text.substring(0, 40)}" \u2192 ${intentScore.toFixed(3)}`);
+        console.debug(`[YouTube Purge AI] "${request.text.substring(0, 40)}" -> ${intentScore.toFixed(3)}`);
         return intentScore;
       } catch (err) {
         console.error("[YouTube Purge AI] Classification failed:", err);

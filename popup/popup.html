@@ -29,7 +29,14 @@
     <span id="statusText">Filtering active</span>
   </div>
 
+  <!-- ── AI Engine Status ──────────────────────────────────────── -->
+  <div class="ai-status-bar" id="aiStatusBar">
+    <span class="ai-status-label">Gemini Nano</span>
+    <span class="ai-status-badge" id="aiStatusBadge">Checking...</span>
+  </div>
+
   <!-- ── Intent Section ─────────────────────────────────────── -->
+
   <main class="main">
     <section class="section">
       <label class="label" for="intentInput">
@@ -95,7 +102,7 @@
     <section class="section row-section">
       <div class="row-label">
         <span class="label">Strict Mode</span>
-        <p class="hint">Hide videos AI is uncertain about (score <= threshold).</p>
+        <p class="hint">Hide videos AI is uncertain about (score below threshold).</p>
       </div>
       <label class="toggle small" id="strictToggleLabel">
         <input type="checkbox" id="strictToggle" checked />
@@ -113,10 +120,10 @@
     <div class="save-feedback" id="saveFeedback" aria-live="polite"></div>
   </main>
 
-  <!-- ── Footer ──────────────────────────────────────────────── -->
   <footer class="footer">
-    <span>YouTube Purge v1.0 · YouTube Semantic Filter</span>
+    <span>YouTube Purge v2.0 · Gemini Nano</span>
   </footer>
+
 
   <script src="popup.js"></script>
 </body>

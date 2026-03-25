@@ -115,6 +115,46 @@ body {
   50% { opacity: 0.5; }
 }
 
+/* ─── AI Status Bar ─────────────────────────────────────────────────────────── */
+.ai-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.ai-status-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.ai-status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  background: var(--gray-bg);
+  color: var(--gray);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  transition: all var(--transition);
+}
+.ai-status-badge.ready {
+  background: rgba(100, 200, 120, 0.12);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.25);
+}
+.ai-status-badge.downloading {
+  background: rgba(250, 204, 21, 0.1);
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.2);
+}
+
+
 /* ─── Main ──────────────────────────────────────────────────────────────────── */
 .main { padding: 14px 16px 4px; display: flex; flex-direction: column; gap: 14px; }
 
